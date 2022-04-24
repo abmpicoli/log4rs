@@ -7,7 +7,10 @@ use log4rs::{
     config::{Appender, Config, Root},
     encode::pattern::PatternEncoder,
     filter::threshold::ThresholdFilter,
+
 };
+use std::fs;
+use std::path::Path;
 
 fn main() -> Result<(), SetLoggerError> {
     let level = log::LevelFilter::Info;
@@ -51,6 +54,29 @@ fn main() -> Result<(), SetLoggerError> {
     info!("Goes to stderr and file");
     debug!("Goes to file only");
     trace!("Goes to file only");
+
+    // abmpicoli: this is a check for an antipattern: initialization overrides can cause unpredictable
+    // log shifting, and logs all over unpredictable places. So this can never happen.
+
+    // the this_config_shouldnt_be_read.yml creates a log file at /tmp/log4rs_EXAMPLE_LOG_TO_FILE_OH_OH.log.
+    // if this initialization is fine, the file should not exist.
+
+    // making sure the file really doesn't exists before initialization.
+    let file_created_inside_the_config_that_shoudlnt_be_read = Path::new("/tmp/log4rs_EXAMPLE_LOG_TO_FILE_OH_OH.log");
+
+    let _remove_file_outcome = fs::remove_file(file_created_inside_the_config_that_shoudlnt_be_read);
+    if file_created_inside_the_config_that_shoudlnt_be_read.exists() {
+        error!("FAILURE!!! THE FILE REMOVAL DIDNT WORK!");
+    }
+
+    let init_file_result = log4rs::init_file("examples/this_config_shouldnt_be_read.yml", Default::default());
+    if init_file_result.is_err() {
+        info!("SUCCESS!! It should be really an error to reconfigure logs at runtime");
+    };
+    if file_created_inside_the_config_that_shoudlnt_be_read.exists() {
+        error!("FAILURE!! Although init file DIDN'T reconfigure logs, it has tried to do so anyway, creating extraneous log files");
+    }
+
 
     Ok(())
 }

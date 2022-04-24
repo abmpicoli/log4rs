@@ -1,0 +1,18 @@
+appenders:
+    stdout:
+        kind: console
+        encoder:
+            pattern: "OH OH!!!!! FAILURE!!!! {d(%+)(utc)} [{f}:{L}] {h({l})} {M}:{m}{n}"
+        filters:
+            - kind: threshold
+              level: info
+    badbad:
+        kind: file
+        path: "/tmp/log4rs_EXAMPLE_LOG_TO_FILE_OH_OH.log"
+        encoder:
+            pattern: "OH OH!!!!! FAILURE!!!! {d} - {m}{n}"
+root:
+    level: info
+    appenders:
+        - stdout
+        - badbad
